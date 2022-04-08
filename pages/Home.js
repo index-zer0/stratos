@@ -1,5 +1,6 @@
 import React from "react";
 import {
+	Pressable,
 	StyleSheet,
 	Dimensions,
 	ImageBackground,
@@ -11,7 +12,6 @@ import {
 	Box,
 	Text,
 	Heading,
-	Pressable,
 	useColorMode,
 	useColorModeValue,
 	IconButton,
@@ -20,11 +20,12 @@ import {
 	Modal,
 	NumberInput,
 	NumberInputField,
-	NumberInputStepper,
-	NumberIncrementStepper,
-	NumberDecrementStepper,
 	FormControl,
 	Container,
+	Input as TextInput,
+	Alert,
+	HStack,
+	VStack,
 } from "native-base";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import AsyncStorage from "@react-native-async-storage/async-storage";
@@ -91,6 +92,13 @@ const getDateString = (date) => {
 	}
 };
 
+const validDates = (katataksi, apolush) => {
+	if (!katataksi || !apolush) {
+		return true;
+	}
+	return !(katataksi.getTime() > apolush.getTime());
+};
+
 const Home = () => {
 	const [katataksi, setKatataksi] = React.useState(null);
 	const [apolush, setApolush] = React.useState(null);
@@ -103,7 +111,6 @@ const Home = () => {
 
 	const captureAndShareScreenshot = () => {
 		viewShot.current.capture().then((uri) => {
-			console.log("do something with ", uri);
 			Sharing.shareAsync("file://" + uri);
 		}),
 			(error) => console.error("Oops, snapshot failed", error);
@@ -201,10 +208,6 @@ const Home = () => {
 									step={1}
 								>
 									<NumberInputField />
-									<NumberInputStepper>
-										<NumberIncrementStepper />
-										<NumberDecrementStepper />
-									</NumberInputStepper>
 								</NumberInput>
 								<FormControl.HelperText>
 									Ο αριθμός όλων των αδειών που απομένουν στην
@@ -231,10 +234,6 @@ const Home = () => {
 									step={1}
 								>
 									<NumberInputField />
-									<NumberInputStepper>
-										<NumberIncrementStepper />
-										<NumberDecrementStepper />
-									</NumberInputStepper>
 								</NumberInput>
 								<FormControl.HelperText>
 									Οι μέρες φυλακής που σας έχουν αποδοθεί.
@@ -247,30 +246,28 @@ const Home = () => {
 									Μέσος αριθμός ημερών στο στρατόπεδο ανά
 									βδομάδα
 								</FormControl.Label>
-								<NumberInput
-									value={meresAnaVdomada}
-									onChange={(value) => {
+								<TextInput
+									keyboardType="decimal-pad"
+									value={meresAnaVdomada.toString()}
+									onChangeText={(value) => {
 										if (isNaN(value)) {
 											value = 0;
 										}
-										setMeresAnaVdomada(
-											parseFloat(value?.toFixed(2))
-										);
-										_storeData(
-											"@meresAnaVdomada",
-											value?.toFixed(2)
-										);
+										if (parseFloat(value) > 7) {
+											setMeresAnaVdomada(7.0);
+											_storeData(
+												"@meresAnaVdomada",
+												"7.0"
+											);
+										} else {
+											setMeresAnaVdomada(value);
+											_storeData(
+												"@meresAnaVdomada",
+												value
+											);
+										}
 									}}
-									min={0}
-									max={7.0}
-									step={0.01}
-								>
-									<NumberInputField />
-									<NumberInputStepper>
-										<NumberIncrementStepper />
-										<NumberDecrementStepper />
-									</NumberInputStepper>
-								</NumberInput>
+								/>
 								<FormControl.HelperText>
 									Ο μέσος όρος των ημερών που θα παρευρίσκεστε
 									στο στρατόπεδο ανά βδομάδα .
@@ -282,30 +279,28 @@ const Home = () => {
 								<FormControl.Label>
 									Μέσος αριθμός υπηρεσιών ανά βδομάδα
 								</FormControl.Label>
-								<NumberInput
-									value={upiresiesAnaVdomada}
-									onChange={(value) => {
+								<TextInput
+									keyboardType="decimal-pad"
+									value={upiresiesAnaVdomada.toString()}
+									onChangeText={(value) => {
 										if (isNaN(value)) {
 											value = 0;
 										}
-										setUpiresiesAnaVdomada(
-											parseFloat(value?.toFixed(2))
-										);
-										_storeData(
-											"@upiresiesAnaVdomada",
-											value?.toFixed(2)
-										);
+										if (parseFloat(value) > 7) {
+											setUpiresiesAnaVdomada(7.0);
+											_storeData(
+												"@upiresiesAnaVdomada",
+												"7.0"
+											);
+										} else {
+											setUpiresiesAnaVdomada(value);
+											_storeData(
+												"@upiresiesAnaVdomada",
+												value
+											);
+										}
 									}}
-									min={0}
-									max={7.0}
-									step={0.01}
-								>
-									<NumberInputField />
-									<NumberInputStepper>
-										<NumberIncrementStepper />
-										<NumberDecrementStepper />
-									</NumberInputStepper>
-								</NumberInput>
+								/>
 								<FormControl.HelperText>
 									Ο μέσος όρος των υπηρεσιών που εκτελείτε ανά
 									βδομάδα.
@@ -417,25 +412,47 @@ const Center = ({
 					marginBottom: 30,
 				}}
 			>
-				<Pressable
-					onPress={() => setDatePickerVisibility1(true)}
-					style={styles.datePicker}
+				<Box
+					backgroundColor={useColorModeValue(
+						"#f5f5f5aa",
+						"#3d3d3daa"
+					)}
+					px="3"
+					py="1"
+					borderRadius="5"
 				>
-					<Text style={styles.datePickerText}>
-						{katataksi
-							? getDateString(katataksi)
-							: "Ημ/νια κατάταξης"}
-					</Text>
-				</Pressable>
+					<Pressable
+						onPress={() => setDatePickerVisibility1(true)}
+						style={styles.datePicker}
+					>
+						<Text style={styles.datePickerText}>
+							{katataksi
+								? getDateString(katataksi)
+								: "Ημ/νια κατάταξης"}
+						</Text>
+					</Pressable>
+				</Box>
 				<Text>-</Text>
-				<Pressable
-					onPress={() => setDatePickerVisibility2(true)}
-					style={styles.datePicker}
+				<Box
+					backgroundColor={useColorModeValue(
+						"#f5f5f5aa",
+						"#3d3d3daa"
+					)}
+					px="3"
+					py="1"
+					borderRadius="5"
 				>
-					<Text style={styles.datePickerText}>
-						{apolush ? getDateString(apolush) : "Ημ/νια απόλυσης"}
-					</Text>
-				</Pressable>
+					<Pressable
+						onPress={() => setDatePickerVisibility2(true)}
+						style={styles.datePicker}
+					>
+						<Text style={styles.datePickerText}>
+							{apolush
+								? getDateString(apolush)
+								: "Ημ/νια απόλυσης"}
+						</Text>
+					</Pressable>
+				</Box>
 			</Box>
 			<DateTimePickerModal
 				isVisible={isDatePickerVisible1}
@@ -459,74 +476,81 @@ const Center = ({
 				onCancel={() => setDatePickerVisibility2(false)}
 				locale="el_GR"
 			/>
-			<Circle
-				size={(Dimensions.get("window").width * 80) / 100}
-				showsText
-				thickness={8}
-				progress={progress}
-				formatText={(progress) => (progress * 100).toFixed(2) + "%"}
-				color={useColorModeValue("#4a6046", "#deb309")}
-			/>
+			{!validDates(katataksi, apolush) && <AlertDate />}
+			{validDates(katataksi, apolush) && (
+				<Circle
+					size={(Dimensions.get("window").width * 80) / 100}
+					showsText
+					thickness={8}
+					progress={progress}
+					formatText={(progress) => (progress * 100).toFixed(2) + "%"}
+					color={useColorModeValue("#4a6046", "#deb309")}
+				/>
+			)}
 			<Box marginTop={5} />
-			<Camo height={10} onPress={() => setShowModal(true)}>
-				<Box flexDirection="row" alignItems="center" w="90%">
-					<Text color="white" fontSize="lg">
-						{Math.max(
-							(((getDifferenceInDays(new Date(), apolush) -
-								1 -
-								adeies +
-								fulakh) /
-								7) *
-								meresAnaVdomada) |
-								0,
-							0
-						)}
-					</Text>
-					<Text color="white"> ημέρες στο στρατόπεδο</Text>
-					<IconButton
-						variant="unstyled"
-						marginLeft="auto"
-						onPress={() => {}}
-						icon={
-							<Icon
-								size="sm"
-								color="white"
-								as={<Feather name="info" />}
-							/>
-						}
-					/>
-				</Box>
-			</Camo>
+			{validDates(katataksi, apolush) && (
+				<Camo height={10} onPress={() => setShowModal(true)}>
+					<Box flexDirection="row" alignItems="center" w="90%">
+						<Text color="white" fontSize="lg">
+							{Math.max(
+								(((getDifferenceInDays(new Date(), apolush) -
+									1 -
+									adeies +
+									fulakh) /
+									7) *
+									meresAnaVdomada) |
+									0,
+								0
+							)}
+						</Text>
+						<Text color="white"> ημέρες στο στρατόπεδο</Text>
+						<IconButton
+							variant="unstyled"
+							marginLeft="auto"
+							onPress={() => {}}
+							icon={
+								<Icon
+									size="sm"
+									color="white"
+									as={<Feather name="info" />}
+								/>
+							}
+						/>
+					</Box>
+				</Camo>
+			)}
 			<Box marginTop={5} />
-			<Camo height={10} onPress={() => setShowModal(true)}>
-				<Box flexDirection="row" alignItems="center" w="90%">
-					<Text color="white" fontSize="lg">
-						{Math.max(
-							(((getDifferenceInDays(new Date(), apolush) -
-								1 -
-								adeies +
-								fulakh) /
-								7) *
-								upiresiesAnaVdomada) |
-								0,
-							0
-						)}
-					</Text>
-					<Text color="white"> υπηρεσίες</Text>
-					<IconButton
-						variant="unstyled"
-						marginLeft="auto"
-						onPress={() => {}}
-						icon={
-							<Icon
-								size="sm"
-								color="white"
-								as={<Feather name="info" />}
-							/>
-						}
-					/>
-				</Box>
-			</Camo>
+			{validDates(katataksi, apolush) && (
+				<Camo height={10} onPress={() => setShowModal(true)}>
+					<Box flexDirection="row" alignItems="center" w="90%">
+						<Text color="white" fontSize="lg">
+							{Math.max(
+								(((getDifferenceInDays(new Date(), apolush) -
+									1 -
+									adeies +
+									fulakh) /
+									7) *
+									upiresiesAnaVdomada) |
+									0,
+								0
+							)}
+						</Text>
+						<Text color="white"> υπηρεσίες</Text>
+						<IconButton
+							variant="unstyled"
+							marginLeft="auto"
+							onPress={() => {}}
+							icon={
+								<Icon
+									size="sm"
+									color="white"
+									as={<Feather name="info" />}
+								/>
+							}
+						/>
+					</Box>
+				</Camo>
+			)}
 			<Box marginTop={5} />
 		</Box>
 	);
@@ -535,87 +559,98 @@ const Center = ({
 const Footer = ({ katataksi, apolush }) => {
 	return (
 		<Box style={[styles.section, { flex: footer_size, color: "white" }]}>
-			<Camo height={Dimensions.get("window").height * footer_size - 15}>
-				<Box style={{ flexDirection: "row" }}>
-					<Heading
-						size="4xl"
-						fontWeight="600"
-						color="white"
-						styles={styles.textWithShadow}
-					>
-						{(getDifferenceInDays(new Date(), apolush) - 1) | 0}
-					</Heading>
-					<Text
-						fontSize="xl"
-						style={[
-							styles.textWithShadow,
-							{
-								color: "white",
-								position: "relative",
-								top: 37,
-							},
-						]}
-					>
-						ΚΣ
-					</Text>
-				</Box>
-				<Box
-					style={{
-						flexDirection: "row",
-						display: "flex",
-						width: (Dimensions.get("window").width * 80) / 100,
-						justifyContent: "space-between",
-						marginTop: 30,
-						zIndex: 100000,
-					}}
+			{validDates(katataksi, apolush) && (
+				<Camo
+					height={Dimensions.get("window").height * footer_size - 15}
 				>
-					<Text
-						style={[
-							styles.textWithShadow,
-							{
-								marginRight: "auto",
-								fontSize: 15,
-								color: "white",
-							},
-						]}
-					>{`Υπηρετήθηκαν: ${
-						getDifferenceInDays(katataksi, new Date()) | 0
-					}`}</Text>
-					<Text
-						style={[
-							styles.textWithShadow,
-							{
-								marginLeft: "auto",
-								fontSize: 15,
-								color: "white",
-							},
-						]}
-					>{`Συνολικές: ${
-						(getDifferenceInDays(katataksi, apolush) - 1) | 0
-					}`}</Text>
-				</Box>
-			</Camo>
+					<Box style={{ flexDirection: "row" }}>
+						<Heading
+							size="4xl"
+							fontWeight="600"
+							color="white"
+							styles={styles.textWithShadow}
+						>
+							{(getDifferenceInDays(new Date(), apolush) - 1) | 0}
+						</Heading>
+						<Text
+							fontSize="xl"
+							style={[
+								styles.textWithShadow,
+								{
+									color: "white",
+									position: "relative",
+									top: 37,
+								},
+							]}
+						>
+							ΚΣ
+						</Text>
+					</Box>
+					<Box
+						style={{
+							flexDirection: "row",
+							display: "flex",
+							width: (Dimensions.get("window").width * 80) / 100,
+							justifyContent: "space-between",
+							marginTop: 30,
+							zIndex: 100000,
+						}}
+					>
+						<Text
+							style={[
+								styles.textWithShadow,
+								{
+									marginRight: "auto",
+									fontSize: 15,
+									color: "white",
+								},
+							]}
+						>{`Υπηρετήθηκαν: ${
+							getDifferenceInDays(katataksi, new Date()) | 0
+						}`}</Text>
+						<Text
+							style={[
+								styles.textWithShadow,
+								{
+									marginLeft: "auto",
+									fontSize: 15,
+									color: "white",
+								},
+							]}
+						>{`Συνολικές: ${
+							(getDifferenceInDays(katataksi, apolush) - 1) | 0
+						}`}</Text>
+					</Box>
+				</Camo>
+			)}
 		</Box>
 	);
 };
 
-const Camo = ({ height, onPress = () => {}, children }) => {
+const Camo = ({ height, onPress, children }) => {
 	return (
-		<Box
-			borderWidth={1}
-			borderColor={useColorModeValue("#070014", "lightgrey")}
-			shadow="7"
-			height={height}
-			width={Dimensions.get("window").width - 30}
-			style={{
-				marginLeft: 15,
-				marginRight: 15,
-				marginBottom: 15,
-				rounded: 25,
-				borderRadius: 25,
-			}}
+		<Pressable
+			onPress={onPress ? onPress : () => {}}
+			style={({ pressed }) => [
+				{
+					opacity: pressed && onPress !== undefined ? 0.7 : 1,
+				},
+			]}
 		>
-			<Pressable onPress={onPress}>
+			<Box
+				borderWidth={1}
+				borderColor={useColorModeValue("#070014", "lightgrey")}
+				shadow="7"
+				height={height}
+				width={Dimensions.get("window").width - 30}
+				style={{
+					marginLeft: 15,
+					marginRight: 15,
+					marginBottom: 15,
+					rounded: 25,
+					borderRadius: 25,
+				}}
+			>
 				<ImageBackground
 					style={{
 						height: "100%",
@@ -644,8 +679,8 @@ const Camo = ({ height, onPress = () => {}, children }) => {
 						</Box>
 					</Box>
 				</ImageBackground>
-			</Pressable>
-		</Box>
+			</Box>
+		</Pressable>
 	);
 };
 
@@ -688,4 +723,21 @@ const styles = StyleSheet.create({
 const getDifferenceInDays = (date1, date2) => {
 	const diffInMs = Math.abs(date2 - date1);
 	return diffInMs / (1000 * 60 * 60 * 24);
+};
+
+const AlertDate = () => {
+	return (
+		<Alert w="80%" status="warning">
+			<VStack space={2} flexShrink={1} w="100%">
+				<HStack flexShrink={1} space={2} justifyContent="space-between">
+					<HStack space={2} flexShrink={1}>
+						<Alert.Icon mt="1" />
+						<Text fontSize="md" color="coolGray.800">
+							Πρόβλημα με τις ημερομηνίες
+						</Text>
+					</HStack>
+				</HStack>
+			</VStack>
+		</Alert>
+	);
 };
