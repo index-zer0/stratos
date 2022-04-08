@@ -32,6 +32,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { Feather } from "@expo/vector-icons";
 import ViewShot from "react-native-view-shot";
 import * as Sharing from "expo-sharing";
+import ConfettiCannon from "react-native-confetti-cannon";
 
 const header_size = 0.15;
 const center_size = 0.6;
@@ -377,7 +378,12 @@ const Center = ({
 	adeies,
 	fulakh,
 }) => {
+	const cs =
+		Dimensions.get("window").height > 750
+			? (Dimensions.get("window").width * 80) / 100
+			: (Dimensions.get("window").width * 70) / 100;
 	const [progress, setProgress] = React.useState(0.0);
+	const [showConfetti, setShowConfetti] = React.useState(false);
 
 	const [isDatePickerVisible1, setDatePickerVisibility1] =
 		React.useState(false);
@@ -389,6 +395,7 @@ const Center = ({
 			getDifferenceInDays(katataksi, new Date()) /
 			(getDifferenceInDays(katataksi, apolush) - 1);
 		let counter = Math.max(progress, 0);
+
 		const interval = setInterval(() => {
 			if (real_progress > counter) {
 				setProgress((p) => p + 0.01);
@@ -396,6 +403,9 @@ const Center = ({
 			} else {
 				setProgress(real_progress);
 				clearInterval(interval);
+				if (real_progress >= 1) {
+					setShowConfetti(true);
+				}
 			}
 		}, 100);
 		return () => clearInterval(interval);
@@ -403,6 +413,13 @@ const Center = ({
 
 	return (
 		<Box style={[styles.section, { flex: center_size }]}>
+			{showConfetti && (
+				<ConfettiCannon
+					count={100}
+					origin={{ x: -10, y: 0 }}
+					fadeOut={true}
+				/>
+			)}
 			<Box
 				style={{
 					flexDirection: "row",
@@ -479,7 +496,7 @@ const Center = ({
 			{!validDates(katataksi, apolush) && <AlertDate />}
 			{validDates(katataksi, apolush) && (
 				<Circle
-					size={(Dimensions.get("window").width * 80) / 100}
+					size={cs}
 					showsText
 					thickness={8}
 					progress={progress}
@@ -557,12 +574,14 @@ const Center = ({
 };
 
 const Footer = ({ katataksi, apolush }) => {
+	const h =
+		Dimensions.get("window").height > 750
+			? Dimensions.get("window").height * footer_size - 15
+			: Dimensions.get("window").height * footer_size - 25;
 	return (
 		<Box style={[styles.section, { flex: footer_size, color: "white" }]}>
 			{validDates(katataksi, apolush) && (
-				<Camo
-					height={Dimensions.get("window").height * footer_size - 15}
-				>
+				<Camo height={h}>
 					<Box style={{ flexDirection: "row" }}>
 						<Heading
 							size="4xl"
