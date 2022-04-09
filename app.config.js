@@ -3,7 +3,7 @@ import "dotenv/config";
 export default {
 	name: "Stratos",
 	slug: "Stratos",
-	version: "1.0.7",
+	version: "1.1.0",
 	sdkVersion: "44.0.0",
 	orientation: "portrait",
 	icon: "./assets/icon.png",
@@ -27,7 +27,7 @@ export default {
 		},
 		package: "armyapp.apk",
 		permissions: [],
-		versionCode: 7,
+		versionCode: 8,
 		config: {
 			googleMobileAdsAppId: process.env.APP_ID,
 		},
