@@ -18,7 +18,7 @@
 		"expo-sharing": "~10.1.0",
 		"expo-status-bar": "~1.2.0",
 		"expo-updates": "~0.11.6",
-		"minimist": "1.2.5",
+		"minimist": "1.2.6",
 		"native-base": "^3.3.2",
 		"node-fetch": "^2.6.7",
 		"nth-check": "^2.0.1",
